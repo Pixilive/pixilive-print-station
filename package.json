@@ -1,0 +1,33 @@
+{
+  "name": "pixilive-print-station",
+  "version": "1.0.0",
+  "description": "Pixilive Print Station",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "electron .",
+    "build": "electron-builder"
+  },
+  "build": {
+    "appId": "live.pixi.print-station",
+    "productName": "Pixilive Print Station",
+    "asar": true,
+    "mac": {
+      "category": "public.app-category.productivity",
+      "target": "dmg",
+      "icon": "src/assets/icon.icns"
+    },
+    "win": {
+      "target": "nsis"
+    }
+  },
+  "devDependencies": {
+    "electron": "^34.0.0",
+    "electron-builder": "^25.0.0"
+  },
+  "dependencies": {
+    "axios": "^1.0.0",
+    "chokidar": "^5.0.0",
+    "electron-store": "^11.0.2",
+    "sharp": "^0.33.0"
+  }
+}

@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pixilive Print Station</title>
+  <style>
+    :root {
+      --primary: #8ceb71;
+      --primary-50: #c4f4b9;
+      --primary-dark: #5cc944;
+      --success: #17db4e;
+      --success-bg: #e8fdf0;
+      --error: #E24B4A;
+      --error-bg: #FDECEA;
+      --warning: #EF9F27;
+      --warning-bg: #FEF3E2;
+      --text-primary: #373737;
+      --text-secondary: #888;
+      --text-tertiary: #aaa;
+      --border: #f0f0f0;
+      --border-input: #e0e0e0;
+      --bg-hover: #f7f7f7;
+      --bg-input: #fafafa;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-size: 13px;
+      background: #ffffff;
+      color: var(--text-primary);
+      height: 100vh;
+      overflow: hidden;
+      user-select: none;
+    }
+
+    .header {
+      padding: 14px 16px 12px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .logo-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--primary);
+    }
+
+    .logo-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .status-pill {
+      font-size: 11px;
+      font-weight: 500;
+      padding: 3px 9px;
+      border-radius: 20px;
+    }
+
+    .status-ready { background: var(--primary-50); color: #2a7a1a; }
+    .status-busy  { background: var(--warning-bg); color: #854F0B; }
+    .status-error { background: var(--error-bg); color: #A32D2D; }
+
+    .printer-block {
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .printer-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .printer-sub {
+      font-size: 11px;
+      color: var(--text-secondary);
+      margin-top: 3px;
+    }
+
+    .section-title {
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--text-tertiary);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 10px 16px 6px;
+    }
+
+    .job-list {
+      padding: 0 8px;
+      max-height: 160px;
+      overflow-y: auto;
+    }
+
+    .job-item {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 8px;
+      border-radius: 8px;
+      margin-bottom: 3px;
+    }
+
+    .job-item.is-active { background: var(--bg-hover); }
+
+    .job-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .dot-printing { background: var(--warning); }
+    .dot-pending  { background: #ccc; }
+    .dot-done     { background: var(--success); }
+    .dot-error    { background: var(--error); }
+
+    .job-info { flex: 1; }
+    .job-name { font-size: 13px; font-weight: 500; }
+    .job-meta { font-size: 11px; color: var(--text-secondary); margin-top: 1px; }
+
+    .empty-queue {
+      padding: 20px 16px;
+      text-align: center;
+      color: #bbb;
+      font-size: 12px;
+    }
+
+    .footer {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 8px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      gap: 6px;
+      background: #fff;
+    }
+
+    .footer button {
+      flex: 1;
+      padding: 7px 0;
+      font-size: 12px;
+      border: 1px solid var(--border-input);
+      border-radius: 8px;
+      background: #fff;
+      cursor: pointer;
+      color: var(--text-primary);
+    }
+
+    .footer button:hover { background: var(--bg-hover); }
+
+    .footer button.danger {
+      color: var(--error);
+      border-color: #f0c0c0;
+    }
+
+    .settings-view {
+      display: none;
+      padding: 12px 16px;
+      overflow-y: auto;
+      max-height: calc(100vh - 0px);
+    }
+
+    .settings-view.active { display: block; }
+    .main-view.hidden { display: none; }
+
+    .s-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-tertiary);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin: 14px 0 6px;
+    }
+
+    .s-label:first-child { margin-top: 0; }
+
+    select, input[type="number"] {
+      width: 100%;
+      padding: 7px 10px;
+      border: 1px solid var(--border-input);
+      border-radius: 8px;
+      font-size: 13px;
+      background: var(--bg-input);
+      color: var(--text-primary);
+      appearance: auto;
+    }
+
+    .format-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 6px;
+    }
+
+    .fmt-btn {
+      padding: 8px 4px;
+      text-align: center;
+      border: 1px solid var(--border-input);
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      background: var(--bg-input);
+    }
+
+    .fmt-btn.selected {
+      border-color: var(--primary-dark);
+      background: var(--primary-50);
+      color: #2a7a1a;
+    }
+
+    .fmt-sub {
+      font-size: 10px;
+      display: block;
+      margin-top: 2px;
+      opacity: 0.7;
+      font-weight: 400;
+    }
+
+    .mask-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .mask-card { min-width: 0; }
+
+    .mask-card-label {
+      font-size: 11px;
+      color: var(--text-secondary);
+      margin-bottom: 5px;
+    }
+
+    .mask-preview-box {
+      width: 100%;
+      height: 70px;
+      border: 1px dashed var(--border-input);
+      border-radius: 7px;
+      background: var(--bg-input);
+      overflow: hidden;
+      position: relative;
+      margin-bottom: 6px;
+    }
+
+    .mask-preview-box img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: none;
+    }
+
+    .mask-preview-box img.visible { display: block; }
+
+    .mask-preview-box .mask-empty {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      color: #bbb;
+    }
+
+    .mask-preview-box.loaded {
+      border-color: var(--primary-dark);
+      border-style: solid;
+    }
+
+    .mask-filename {
+      font-size: 10px;
+      color: #2a7a1a;
+      margin-bottom: 4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: none;
+    }
+
+    .mask-filename.visible { display: block; }
+
+    .mask-btn {
+      width: 100%;
+      padding: 8px 0;
+      font-size: 12px;
+      border: 1px solid var(--border-input);
+      border-radius: 7px;
+      background: #fff;
+      cursor: pointer;
+      color: var(--text-primary);
+    }
+
+    .mask-btn:hover { background: var(--bg-hover); }
+
+    .mask-btn.remove {
+      margin-top: 4px;
+      color: var(--error);
+      border-color: #f0c0c0;
+      background: #fff;
+    }
+
+    .mask-btn.remove:hover { background: var(--error-bg); }
+
+    .hotfolder-block {
+      border: 1px solid var(--border-input);
+      border-radius: 9px;
+      overflow: hidden;
+    }
+
+    .hotfolder-toggle {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 12px;
+      cursor: pointer;
+      background: var(--bg-input);
+    }
+
+    .hotfolder-toggle-label {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-primary);
+    }
+
+    .toggle {
+      width: 34px;
+      height: 20px;
+      border-radius: 10px;
+      background: var(--border-input);
+      position: relative;
+      cursor: pointer;
+      transition: background 0.2s;
+      flex-shrink: 0;
+    }
+
+    .toggle.on { background: var(--primary-dark); }
+
+    .toggle-thumb {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: white;
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      transition: left 0.2s;
+    }
+
+    .toggle.on .toggle-thumb { left: 16px; }
+
+    .hotfolder-path-block {
+      padding: 10px 12px;
+      border-top: 1px solid var(--border);
+      display: none;
+    }
+
+    .hotfolder-path-block.visible { display: block; }
+
+    .hotfolder-path {
+      font-size: 11px;
+      color: var(--text-secondary);
+      margin-bottom: 8px;
+      word-break: break-all;
+      min-height: 16px;
+    }
+
+    .hotfolder-path.set { color: #2a7a1a; }
+
+    .hotfolder-btn {
+      width: 100%;
+      padding: 8px 0;
+      font-size: 12px;
+      border: 1px solid var(--border-input);
+      border-radius: 7px;
+      background: #fff;
+      cursor: pointer;
+      color: var(--text-primary);
+    }
+
+    .hotfolder-btn:hover { background: var(--bg-hover); }
+
+    .hotfolder-status {
+      margin-top: 6px;
+      font-size: 11px;
+      color: var(--text-tertiary);
+      text-align: center;
+    }
+
+    .hotfolder-status.active { color: #2a7a1a; }
+
+    .save-btn {
+      width: 100%;
+      margin-top: 16px;
+      padding: 9px;
+      background: var(--primary);
+      color: #2a7a1a;
+      border: none;
+      border-radius: 9px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .save-btn:hover { background: var(--primary-dark); color: white; }
+
+    .back-btn {
+      width: 100%;
+      margin-top: 8px;
+      padding: 8px;
+      border: 1px solid var(--border-input);
+      border-radius: 9px;
+      background: #fff;
+      font-size: 13px;
+      cursor: pointer;
+      color: var(--text-primary);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="main-view" id="mainView">
+    <div class="header">
+      <div class="logo">
+        <div class="logo-dot"></div>
+        <span class="logo-name">Print Station</span>
+      </div>
+      <span class="status-pill status-ready" id="statusPill">Prête</span>
+    </div>
+
+    <div class="printer-block">
+      <div class="printer-name" id="printerName">Aucune imprimante</div>
+      <div class="printer-sub" id="printerSub">— · —</div>
+    </div>
+
+    <div class="section-title">File d'attente</div>
+    <div class="job-list" id="jobList">
+      <div class="empty-queue">Aucune impression en cours</div>
+    </div>
+
+    <div class="footer">
+      <button onclick="showSettings()">Paramètres</button>
+      <button class="danger" onclick="window.api.quit()">Quitter</button>
+    </div>
+  </div>
+
+  <div class="settings-view" id="settingsView">
+    <div class="s-label">Imprimante</div>
+    <select id="printerSelect"></select>
+
+    <div class="s-label">Format papier</div>
+    <div class="format-grid">
+      <div class="fmt-btn selected" data-format="10x15" onclick="selectFormat(this)">
+        10×15<span class="fmt-sub">4×6"</span>
+      </div>
+      <div class="fmt-btn" data-format="13x18" onclick="selectFormat(this)">
+        13×18<span class="fmt-sub">5×7"</span>
+      </div>
+      <div class="fmt-btn" data-format="15x20" onclick="selectFormat(this)">
+        15×20<span class="fmt-sub">6×8"</span>
+      </div>
+    </div>
+
+    <div class="s-label">Masques</div>
+    <div class="mask-row">
+      <div class="mask-card">
+        <div class="mask-card-label">Portrait</div>
+        <div class="mask-preview-box" id="maskPortraitBox">
+          <img id="maskPortraitImg" src="" alt=""/>
+          <div class="mask-empty" id="maskPortraitEmpty">+ Importer</div>
+        </div>
+        <div class="mask-filename" id="maskPortraitName"></div>
+        <button class="mask-btn" onclick="importMask('portrait')">Choisir PNG</button>
+        <button class="mask-btn remove" id="maskPortraitRemove" onclick="removeMask('portrait')" style="display:none;">Supprimer</button>
+      </div>
+      <div class="mask-card">
+        <div class="mask-card-label">Paysage</div>
+        <div class="mask-preview-box" id="maskLandscapeBox">
+          <img id="maskLandscapeImg" src="" alt=""/>
+          <div class="mask-empty" id="maskLandscapeEmpty">+ Importer</div>
+        </div>
+        <div class="mask-filename" id="maskLandscapeName"></div>
+        <button class="mask-btn" onclick="importMask('landscape')">Choisir PNG</button>
+        <button class="mask-btn remove" id="maskLandscapeRemove" onclick="removeMask('landscape')" style="display:none;">Supprimer</button>
+      </div>
+    </div>
+
+    <div class="s-label">Hotfolder</div>
+    <div class="hotfolder-block">
+      <div class="hotfolder-toggle" onclick="toggleHotfolder()">
+        <span class="hotfolder-toggle-label">Activer le hotfolder</span>
+        <div class="toggle" id="hotfolderToggle">
+          <div class="toggle-thumb"></div>
+        </div>
+      </div>
+      <div class="hotfolder-path-block" id="hotfolderPathBlock">
+        <div class="hotfolder-path" id="hotfolderPathDisplay">Aucun dossier sélectionné</div>
+        <button class="hotfolder-btn" onclick="selectHotfolder()">Choisir le dossier</button>
+        <div class="hotfolder-status" id="hotfolderStatus">En attente d'un dossier</div>
+      </div>
+    </div>
+
+    <div class="s-label">Port local</div>
+    <input type="number" id="portInput" value="4242" min="1024" max="65535"/>
+
+    <button class="save-btn" onclick="saveSettings()">Enregistrer</button>
+    <button class="back-btn" onclick="showMain()">← Retour</button>
+  </div>
+
+  <script>
+    let currentSettings = {}
+    let currentJobs = []
+    let selectedFormat = '10x15'
+    let hotfolderActive = false
+
+    async function init() {
+      currentSettings = await window.api.getSettings()
+      currentJobs = await window.api.getJobs()
+
+      selectedFormat = currentSettings.format || '10x15'
+      hotfolderActive = currentSettings.hotfolderActive || false
+
+      updatePrinterBlock()
+      renderJobs()
+
+      const printers = await window.api.getPrinters()
+      const select = document.getElementById('printerSelect')
+      select.innerHTML = printers.length
+        ? printers.map(p => `<option value="${p}" ${p === currentSettings.printer ? 'selected' : ''}>${p}</option>`).join('')
+        : '<option value="">Aucune imprimante détectée</option>'
+
+      document.getElementById('portInput').value = currentSettings.port || 4242
+
+      document.querySelectorAll('.fmt-btn').forEach(btn => {
+        btn.classList.toggle('selected', btn.dataset.format === selectedFormat)
+      })
+
+      updateMaskPreviews()
+      updateHotfolderUI()
+
+      window.api.onJobsUpdated((jobs) => {
+        currentJobs = jobs
+        renderJobs()
+      })
+    }
+
+    function updatePrinterBlock() {
+      document.getElementById('printerName').textContent = currentSettings.printer || 'Aucune imprimante'
+      document.getElementById('printerSub').textContent =
+        `${currentSettings.format || '—'} · Port ${currentSettings.port || 4242}`
+    }
+
+    function renderJobs() {
+      const list = document.getElementById('jobList')
+      const active = currentJobs.filter(j => j.status !== 'done')
+
+      if (active.length === 0) {
+        list.innerHTML = '<div class="empty-queue">Aucune impression en cours</div>'
+        return
+      }
+
+      list.innerHTML = active.map(job => `
+        <div class="job-item ${job.status === 'printing' ? 'is-active' : ''}">
+          <div class="job-dot dot-${job.status}"></div>
+          <div class="job-info">
+            <div class="job-name">${job.name || 'Sans nom'}</div>
+            <div class="job-meta">× ${job.quantity} · ${labelStatus(job.status)}</div>
+          </div>
+        </div>
+      `).join('')
+    }
+
+    function labelStatus(status) {
+      const labels = {
+        pending: 'en attente',
+        printing: 'impression en cours',
+        done: 'terminé',
+        error: 'erreur'
+      }
+      return labels[status] || status
+    }
+
+    function selectFormat(el) {
+      document.querySelectorAll('.fmt-btn').forEach(b => b.classList.remove('selected'))
+      el.classList.add('selected')
+      selectedFormat = el.dataset.format
+    }
+
+    function showSettings() {
+      document.getElementById('mainView').classList.add('hidden')
+      document.getElementById('settingsView').classList.add('active')
+    }
+
+    function showMain() {
+      document.getElementById('mainView').classList.remove('hidden')
+      document.getElementById('settingsView').classList.remove('active')
+      updatePrinterBlock()
+    }
+
+    async function saveSettings() {
+      const newSettings = {
+        printer: document.getElementById('printerSelect').value,
+        format: selectedFormat,
+        port: parseInt(document.getElementById('portInput').value) || 4242,
+        hotfolderActive: hotfolderActive
+      }
+      currentSettings = await window.api.updateSettings(newSettings)
+      showMain()
+    }
+
+    function toggleHotfolder() {
+      hotfolderActive = !hotfolderActive
+      updateHotfolderUI()
+    }
+
+    function updateHotfolderUI() {
+      const toggle = document.getElementById('hotfolderToggle')
+      const pathBlock = document.getElementById('hotfolderPathBlock')
+      const pathDisplay = document.getElementById('hotfolderPathDisplay')
+      const status = document.getElementById('hotfolderStatus')
+
+      toggle.classList.toggle('on', hotfolderActive)
+      pathBlock.classList.toggle('visible', hotfolderActive)
+
+      if (currentSettings.hotfolderPath) {
+        const folderName = currentSettings.hotfolderPath.split('/').pop()
+        pathDisplay.textContent = folderName
+        pathDisplay.classList.add('set')
+        status.textContent = hotfolderActive ? '● Actif — surveillance en cours' : 'Désactivé'
+        status.className = 'hotfolder-status' + (hotfolderActive ? ' active' : '')
+      } else {
+        pathDisplay.textContent = 'Aucun dossier sélectionné'
+        pathDisplay.classList.remove('set')
+        status.textContent = 'En attente d\'un dossier'
+        status.className = 'hotfolder-status'
+      }
+    }
+
+    async function selectHotfolder() {
+      const folderPath = await window.api.selectHotfolder()
+      if (!folderPath) return
+      currentSettings = await window.api.getSettings()
+      updateHotfolderUI()
+    }
+
+    function setMaskPreview(orientation, filePath) {
+      const isPortrait = orientation === 'portrait'
+      const box       = document.getElementById(isPortrait ? 'maskPortraitBox'     : 'maskLandscapeBox')
+      const img       = document.getElementById(isPortrait ? 'maskPortraitImg'     : 'maskLandscapeImg')
+      const empty     = document.getElementById(isPortrait ? 'maskPortraitEmpty'   : 'maskLandscapeEmpty')
+      const nameEl    = document.getElementById(isPortrait ? 'maskPortraitName'    : 'maskLandscapeName')
+      const removeBtn = document.getElementById(isPortrait ? 'maskPortraitRemove'  : 'maskLandscapeRemove')
+
+      if (filePath) {
+        img.src = 'file://' + filePath
+        img.classList.add('visible')
+        empty.style.display = 'none'
+        box.classList.add('loaded')
+        nameEl.textContent = filePath.split('/').pop()
+        nameEl.classList.add('visible')
+        removeBtn.style.display = 'block'
+      } else {
+        img.src = ''
+        img.classList.remove('visible')
+        empty.style.display = 'flex'
+        box.classList.remove('loaded')
+        nameEl.textContent = ''
+        nameEl.classList.remove('visible')
+        removeBtn.style.display = 'none'
+      }
+    }
+
+    function updateMaskPreviews() {
+      setMaskPreview('portrait', currentSettings.maskPortrait || null)
+      setMaskPreview('landscape', currentSettings.maskLandscape || null)
+    }
+
+    async function importMask(orientation) {
+      const filePath = await window.api.importMask(orientation)
+      if (!filePath) return
+      currentSettings = await window.api.getSettings()
+      setMaskPreview(orientation, filePath)
+    }
+
+    async function removeMask(orientation) {
+      const key = orientation === 'portrait' ? 'maskPortrait' : 'maskLandscape'
+      await window.api.updateSettings({ [key]: null })
+      currentSettings = await window.api.getSettings()
+      setMaskPreview(orientation, null)
+    }
+
+    init()
+  </script>
+</body>
+</html>
