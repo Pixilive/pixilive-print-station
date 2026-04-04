@@ -1,9 +1,9 @@
 # Pixilive Print Station — Installation et utilisation
 
-Connecte ton imprimante DNP directement à Pixilive pour des impressions instantanées lors de tes événements.
+Pixilive Print Station connecte ton imprimante DNP à Pixilive pour proposer des impressions photo instantanées lors de tes événements.
 
 👉 [Télécharger la dernière version](https://github.com/Pixilive/pixilive-print-station/releases)
-
+Sur la page qui s'ouvre, télécharge le fichier **Pixilive.Print.Station-X.X.X-arm64.dmg**.
 ---
 
 ## 1. Installer l'app
