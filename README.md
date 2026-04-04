@@ -16,16 +16,7 @@ Ouvre le fichier **Pixilive Print Station.dmg** et glisse l'app dans ton dossier
 
 ## 2. Premier lancement
 
-macOS peut bloquer l'ouverture de l'app car elle n'est pas distribuée via l'App Store. Pas d'inquiétude, c'est normal.
-
-**Option A — Via les Réglages système (recommandé)**
-
-1. Va dans **Réglages système** → **Confidentialité et sécurité**
-2. Fais défiler vers le bas jusqu'à voir le message *"Pixilive Print Station a été bloquée"*
-3. Clique sur **"Ouvrir quand même"**
-4. Confirme dans la boîte de dialogue
-
-**Option B — Via le Terminal**
+macOS peut bloquer l'ouverture de l'app car elle n'est pas distribuée via l'App Store (err. "L'application est endommagée et ne peut être ouvert"). Pas d'inquiétude, c'est normal.
 
 1. Ouvre le Terminal : **Cmd+Espace** → tape `Terminal` → Entrée
 2. Copie-colle cette commande et appuie sur Entrée :
