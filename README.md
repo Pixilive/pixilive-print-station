@@ -1,99 +1,61 @@
-# Pixilive Print Station — Installation et utilisation
+# Pixilive Print Station
 
-Pixilive Print Station connecte ton imprimante DNP à Pixilive pour proposer des impressions photo instantanées lors de tes événements.
+A free, lightweight macOS app that watches a folder and prints incoming photos automatically to DNP dye-sublimation printers. A native Mac alternative to DNP's own Hot Folder Print utility, which is Windows-first.
 
-👉 [Télécharger la dernière version](https://github.com/Pixilive/pixilive-print-station/releases)
+## What it does
 
-Sur la page qui s'ouvre, télécharge le fichier **Pixilive.Print.Station-X.X.X-arm64.dmg**.
+- Watches a folder and prints new images automatically to a connected DNP printer (tested with DNP RX1HS & DS620)
+- Archives each printed file into a `_printed` subfolder afterwards
+- Runs quietly in the menu bar, no interaction needed once configured
+- Works completely standalone — no account of any kind required
 
----
+## Installation
 
-## 1. Installer l'app
+1. Download the latest `.dmg` from the [Releases](../../releases) page — grab `Pixilive.Print.Station-X.X.X-arm64.dmg`.
+2. Open the `.dmg` and drag the app into your Applications folder.
+3. First launch: macOS will likely block it since it's not distributed via the App Store ("app is damaged" error). This is expected for independently distributed apps. Open Terminal and run:
+   ```
+   xattr -cr "/Applications/Pixilive Print Station.app"
+   ```
+   Then launch the app normally from Applications.
+4. Click the menu bar icon (top right) → **Settings**:
+   - **Printer**: select your DNP printer from the list
+   - **Paper size**: match the paper loaded in your printer
+   - **Hotfolder**: enable the toggle, then choose any local folder you want to watch
+5. Save. Drop a JPEG into that folder — it should print automatically.
 
-Ouvre le fichier **Pixilive Print Station.dmg** et glisse l'app dans ton dossier Applications.
+## Compatibility
 
----
+macOS, DNP dye-sublimation printers connected via USB (tested with DNP RX1HS).
 
-## 2. Premier lancement
+## Using it with Pixilive
 
-macOS peut bloquer l'ouverture de l'app car elle n'est pas distribuée via l'App Store (err. "L'application est endommagée et ne peut être ouvert"). Pas d'inquiétude, c'est normal.
+Print Station is built and maintained by [Pixilive](https://about.pixi.live), a real-time photo distribution platform for professional events. Beyond standalone hotfolder printing, it connects directly to your Pixilive event gallery, turning it into a live print station for VIP evenings, weddings, birthdays, and photo booths — no other software needed.
 
-1. Ouvre le Terminal : **Cmd+Espace** → tape `Terminal` → Entrée
-2. Copie-colle cette commande et appuie sur Entrée :
+Two ways to print from a Pixilive gallery:
 
-```
-xattr -cr "/Applications/Pixilive Print Station.app"
-```
+### Moderated printing
 
-3. Lance l'app normalement depuis Applications
+Attendees request prints directly from the gallery, specifying their name and the number of copies. Requests land in a queue visible from the Pixilive backoffice. When someone shows up at the print stand, staff find their request by name and trigger the print with one click — full resolution, no watermark.
 
----
+Best for: staffed events, print stands, photo bars.
 
-## 3. Configuration
+### Automatic printing (Hotfolder)
 
-Au premier lancement, clique sur l'icône dans la barre de menu en haut à droite → **Paramètres** :
+Point the same Hotfolder feature at a Dropbox folder synced with your Pixilive gallery. Every photo that lands there prints automatically, no staff intervention needed.
 
-- **Imprimante** : sélectionne ta DNP dans la liste
-- **Format papier** : choisis le format correspondant au papier chargé
-- **Masques** : importe tes fichiers PNG portrait et paysage si besoin
-- Clique **Enregistrer**
+Best for: solo operation, remote/unattended printing.
 
----
+### Local port (4242)
 
-## 4. Deux modes d'impression (depuis Pixilive)
+Moderated printing communicates with Pixilive over local port 4242. This is preconfigured and rarely needs changing. If another app is already using it, change it under **Settings → Local port** (any value between 1024–65535 works). Hotfolder mode doesn't use this port at all — it works independently of any network connection to Pixilive.
 
-### Impression avec modération
+## Updates
 
-Les participants demandent leurs photos depuis la galerie Pixilive. Un animateur connecté au backoffice valide et déclenche l'impression quand ils se présentent devant lui.
-
-**Avantages** : temps réel, file d'attente visible, statut mis à jour dans Pixilive.
-
-**Idéal pour** : événements avec animateur, stand photo, bar à impression.
-
----
-
-### Impression automatique (via Dropbox Hotfolder)
-
-L'app surveille un dossier local en permanence. Dès qu'une image y apparaît, elle est automatiquement imprimée puis archivée dans un sous-dossier `_printed`.
-
-Ce mode fonctionne avec Dropbox : Dropbox synchronise les images dans le dossier surveillé, l'app les imprime au fur et à mesure.
-
-**Pour l'activer** :
-1. Va dans **Paramètres** → section **Hotfolder**
-2. Active le toggle
-3. Clique sur **Choisir le dossier** et sélectionne ton dossier Dropbox Pixilive
-4. Clique **Enregistrer**
-
-**Avantages** : fonctionne sans intervention de l'animateur, compatible avec les workflows Dropbox existants.
-
-**Idéal pour** : usage solo, impressions à distance, événements sans animateur.
-
----
-
-## 5. Le port local (4242)
-
-L'app utilise le port **4242** pour communiquer avec Pixilive. Ce port est configuré par défaut et ne nécessite aucune modification dans la grande majorité des cas.
-
-Si l'app indique que le port est déjà utilisé par une autre application, tu peux le changer dans **Paramètres** → **Port local**. N'importe quel nombre entre 1024 et 65535 convient.
-
----
-
-## 6. Utilisation au quotidien
-
-L'app doit être installée et lancée sur l'ordinateur directement connecté à l'imprimante DNP en USB.
-
-Lance l'app en début d'événement — elle apparaît dans la barre de menu en haut à droite (icône imprimante). Elle doit rester ouverte pendant toute la durée de l'événement pour recevoir et traiter les impressions.
-
-Un clic sur l'icône affiche la file d'attente en cours. Un clic sur **Paramètres** permet de modifier la configuration à tout moment.
-
----
-
-## 7. Mises à jour
-
-L'app te notifie automatiquement quand une nouvelle version est disponible. Tu peux aussi consulter l'historique des versions sur :
+The app checks for new versions automatically. Full version history:
 
 👉 [github.com/Pixilive/pixilive-print-station/releases](https://github.com/Pixilive/pixilive-print-station/releases)
 
----
+## Support
 
-Pour toute question : contact@pixi.live
+Questions or issues? Open an [issue](../../issues) on this repo, or contact contact@pixi.live.
