@@ -1,7 +1,8 @@
-const { app, BrowserWindow, Tray, nativeImage, ipcMain, dialog } = require('electron')
+const { app, BrowserWindow, Tray, nativeImage, ipcMain, dialog, Notification, shell } = require('electron')
+const { autoUpdater } = require('electron-updater')
 const path = require('path')
 const { exec } = require('child_process')
-const { startServer, stopServer, getSettings, updateSettings, processAndPrint } = require('./server')
+const { startServer, stopServer, getSettings, updateSettings, processAndPrint, getLogs, getPaper, logDir } = require('./server')
 
 let tray = null
 let win = null
@@ -24,6 +25,47 @@ function updateJobStatus(id, status) {
   }
 }
 
+// Langue : réglage « auto » = français si le Mac est en français, anglais sinon
+function resolveLang() {
+  const choice = (getSettings().language || 'auto')
+  if (choice === 'fr' || choice === 'en') return choice
+  const sys = ((app.getPreferredSystemLanguages && app.getPreferredSystemLanguages()[0]) || app.getLocale() || 'en').toLowerCase()
+  return sys.startsWith('fr') ? 'fr' : 'en'
+}
+
+const MAIN_TEXTS = {
+  fr: {
+    paperTitle: 'Papier bientôt épuisé',
+    paperBody: (r, t) => `Il reste ${r} tirages sur ${t}. Préparez un nouveau rouleau.`,
+    maskTitle: o => `Choisir le masque ${o === 'portrait' ? 'portrait' : 'paysage'}`,
+    folderTitle: 'Choisir le dossier hotfolder'
+  },
+  en: {
+    paperTitle: 'Paper running low',
+    paperBody: (r, t) => `${r} prints left out of ${t}. Get a new roll ready.`,
+    maskTitle: o => `Choose the ${o === 'portrait' ? 'portrait' : 'landscape'} mask`,
+    folderTitle: 'Choose the hotfolder'
+  }
+}
+
+function mt() {
+  return MAIN_TEXTS[resolveLang()]
+}
+
+function onLogs(journal) {
+  if (win) win.webContents.send('logs-updated', journal)
+}
+
+function onPaper(paper, alert) {
+  if (win) win.webContents.send('paper-updated', paper)
+  if (alert && Notification.isSupported()) {
+    new Notification({
+      title: mt().paperTitle,
+      body: mt().paperBody(paper.remaining, paper.total)
+    }).show()
+  }
+}
+
 function updateTrayBadge() {
   const pending = jobs.filter(j => j.status === 'pending' || j.status === 'printing').length
   tray.setTitle(pending > 0 ? ` ${pending}` : '')
@@ -38,10 +80,11 @@ function handleDeepLink(url) {
       const name = urlObj.searchParams.get('name') || ''
       const printId = urlObj.searchParams.get('id') || ''
       const bubbleEnv = urlObj.searchParams.get('env') || 'live'
+      const fileName = urlObj.searchParams.get('file') || ''
       if (imageUrl) {
         const jobId = Date.now().toString()
         addJob({ id: jobId, name, quantity, status: 'printing' })
-        processAndPrint(imageUrl, quantity, name, printId, bubbleEnv)
+        processAndPrint(imageUrl, quantity, name, printId, bubbleEnv, fileName)
           .then(result => updateJobStatus(jobId, result.success ? 'done' : 'error'))
           .catch(() => updateJobStatus(jobId, 'error'))
       }
@@ -60,7 +103,8 @@ if (process.defaultApp) {
 }
 
 app.whenReady().then(() => {
-  startServer(addJob, updateJobStatus)
+  startServer(addJob, updateJobStatus, { onLogs, onPaper, getLang: resolveLang })
+  autoUpdater.checkForUpdatesAndNotify()
 
   const icon = nativeImage.createFromPath(path.join(__dirname, 'assets/tray-icon.png'))
   icon.setTemplateImage(true)
@@ -123,8 +167,11 @@ app.whenReady().then(() => {
 
   ipcMain.handle('update-settings', (_, newSettings) => {
     updateSettings(newSettings)
+    if ('language' in newSettings && win) win.webContents.send('language-changed', resolveLang())
     return getSettings()
   })
+
+  ipcMain.handle('get-language', () => resolveLang())
 
   ipcMain.handle('get-printers', () => {
     return new Promise((resolve) => {
@@ -140,11 +187,21 @@ app.whenReady().then(() => {
 
   ipcMain.handle('get-jobs', () => jobs)
 
+  ipcMain.handle('get-logs', () => getLogs())
+
+  ipcMain.handle('get-paper', () => getPaper())
+
+  ipcMain.handle('open-log-folder', () => {
+    const dir = logDir()
+    require('fs').mkdirSync(dir, { recursive: true })
+    return shell.openPath(dir)
+  })
+
   ipcMain.handle('import-mask', async (_, orientation) => {
     maskImporting = true
     win.setAlwaysOnTop(false)
     const result = await dialog.showOpenDialog(win, {
-      title: `Choisir le masque ${orientation}`,
+      title: mt().maskTitle(orientation),
       filters: [{ name: 'PNG', extensions: ['png'] }],
       properties: ['openFile']
     })
@@ -161,7 +218,7 @@ app.whenReady().then(() => {
     maskImporting = true
     win.setAlwaysOnTop(false)
     const result = await dialog.showOpenDialog(win, {
-      title: 'Choisir le dossier hotfolder',
+      title: mt().folderTitle,
       properties: ['openDirectory']
     })
     win.setAlwaysOnTop(true)

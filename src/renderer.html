@@ -102,8 +102,146 @@
 
     .job-list {
       padding: 0 8px;
-      max-height: 160px;
+      max-height: 225px;
       overflow-y: auto;
+    }
+
+    .job-list.hidden { display: none; }
+
+    .paper-line {
+      font-size: 11px;
+      color: var(--text-secondary);
+      margin-top: 6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .paper-bar {
+      flex: 1;
+      height: 5px;
+      border-radius: 3px;
+      background: var(--border);
+      overflow: hidden;
+    }
+
+    .paper-fill {
+      height: 100%;
+      width: 0;
+      background: var(--primary-dark);
+      border-radius: 3px;
+    }
+
+    .paper-line.low { color: #854F0B; font-weight: 600; }
+    .paper-line.low .paper-fill { background: var(--warning); }
+    .paper-line.unknown { color: var(--text-tertiary); }
+    .paper-checking { font-size: 10px; color: var(--text-tertiary); }
+
+    .tabs {
+      display: flex;
+      gap: 4px;
+      padding: 8px 16px 6px;
+    }
+
+    .tab {
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--text-tertiary);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 3px 8px;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .tab.active { color: var(--text-primary); background: var(--bg-hover); }
+
+    .log-item {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 6px 8px;
+      border-radius: 8px;
+      margin-bottom: 2px;
+    }
+
+    .log-item:hover { background: var(--bg-hover); }
+
+    .log-thumb {
+      width: 34px;
+      height: 34px;
+      border-radius: 5px;
+      object-fit: cover;
+      background: var(--bg-input);
+      flex-shrink: 0;
+    }
+
+    .log-info { flex: 1; min-width: 0; }
+
+    .log-name {
+      font-size: 12px;
+      font-weight: 500;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .log-meta { font-size: 11px; color: var(--text-secondary); margin-top: 1px; }
+
+    .log-status {
+      font-size: 10px;
+      font-weight: 600;
+      padding: 2px 7px;
+      border-radius: 10px;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .st-ok   { background: var(--success-bg); color: #1d7a3a; }
+    .st-wait { background: var(--warning-bg); color: #854F0B; }
+    .st-bad  { background: var(--error-bg); color: #A32D2D; }
+
+    .log-error { font-size: 10px; color: #A32D2D; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    .log-summary {
+      margin: 0 0 6px;
+      padding: 7px 10px;
+      border-radius: 8px;
+      background: var(--bg-hover);
+      font-size: 11px;
+      color: var(--text-secondary);
+      display: flex;
+      justify-content: space-between;
+      gap: 6px;
+    }
+
+    .log-summary strong { color: var(--text-primary); font-size: 12px; }
+    .log-summary .err-count { color: #A32D2D; font-weight: 600; }
+
+    .log-summary .warn {
+      color: #854F0B;
+      background: var(--warning-bg);
+      font-weight: 600;
+      white-space: nowrap;
+      border: none;
+      border-radius: 10px;
+      padding: 2px 8px;
+      font-size: 11px;
+      cursor: pointer;
+    }
+    .log-summary .warn.active { background: var(--warning); color: #fff; }
+
+    .log-actions { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0; }
+    .log-summary span { white-space: nowrap; }
+
+    .log-folder {
+      display: block;
+      text-align: center;
+      font-size: 11px;
+      color: var(--text-secondary);
+      padding: 6px 0 10px;
+      cursor: pointer;
+      text-decoration: underline;
     }
 
     .job-item {
@@ -440,30 +578,34 @@
         <div class="logo-dot"></div>
         <span class="logo-name">Print Station</span>
       </div>
-      <span class="status-pill status-ready" id="statusPill">Prête</span>
+      <span class="status-pill status-ready" id="statusPill" data-i18n="ready">Prête</span>
     </div>
 
     <div class="printer-block">
       <div class="printer-name" id="printerName">Aucune imprimante</div>
       <div class="printer-sub" id="printerSub">— · —</div>
+      <div class="paper-line" id="paperLine" title="">
+        <span id="paperText">Papier : —</span>
+        <div class="paper-bar"><div class="paper-fill" id="paperFill"></div></div>
+      </div>
     </div>
 
-    <div class="section-title">File d'attente</div>
-    <div class="job-list" id="jobList">
-      <div class="empty-queue">Aucune impression en cours</div>
+    <div class="section-title" data-i18n="prints">Impressions</div>
+    <div class="job-list" id="logList">
+      <div class="empty-queue">Aucune impression pour l'instant</div>
     </div>
 
     <div class="footer">
-      <button onclick="showSettings()">Paramètres</button>
-      <button class="danger" onclick="window.api.quit()">Quitter</button>
+      <button onclick="showSettings()" data-i18n="settings">Paramètres</button>
+      <button class="danger" onclick="window.api.quit()" data-i18n="quit">Quitter</button>
     </div>
   </div>
 
   <div class="settings-view" id="settingsView">
-    <div class="s-label">Imprimante</div>
+    <div class="s-label" data-i18n="printer">Imprimante</div>
     <select id="printerSelect"></select>
 
-    <div class="s-label">Format papier</div>
+    <div class="s-label" data-i18n="paperSize">Format papier</div>
     <div class="format-grid">
       <div class="fmt-btn selected" data-format="10x15" onclick="selectFormat(this)">
         10×15<span class="fmt-sub">4×6"</span>
@@ -476,73 +618,139 @@
       </div>
     </div>
 
-    <div class="s-label">Masques</div>
+    <div class="s-label" data-i18n="masks">Masques</div>
     <div class="mask-row">
       <div class="mask-card">
-        <div class="mask-card-label">Portrait</div>
+        <div class="mask-card-label" data-i18n="portrait">Portrait</div>
         <div class="mask-preview-box" id="maskPortraitBox">
           <img id="maskPortraitImg" src="" alt=""/>
-          <div class="mask-empty" id="maskPortraitEmpty">+ Importer</div>
+          <div class="mask-empty" id="maskPortraitEmpty" data-i18n="import">+ Importer</div>
         </div>
         <div class="mask-filename" id="maskPortraitName"></div>
-        <button class="mask-btn" onclick="importMask('portrait')">Choisir PNG</button>
-        <button class="mask-btn remove" id="maskPortraitRemove" onclick="removeMask('portrait')" style="display:none;">Supprimer</button>
+        <button class="mask-btn" onclick="importMask('portrait')" data-i18n="choosePng">Choisir PNG</button>
+        <button class="mask-btn remove" id="maskPortraitRemove" onclick="removeMask('portrait')" style="display:none;" data-i18n="remove">Supprimer</button>
       </div>
       <div class="mask-card">
-        <div class="mask-card-label">Paysage</div>
+        <div class="mask-card-label" data-i18n="landscape">Paysage</div>
         <div class="mask-preview-box" id="maskLandscapeBox">
           <img id="maskLandscapeImg" src="" alt=""/>
-          <div class="mask-empty" id="maskLandscapeEmpty">+ Importer</div>
+          <div class="mask-empty" id="maskLandscapeEmpty" data-i18n="import">+ Importer</div>
         </div>
         <div class="mask-filename" id="maskLandscapeName"></div>
-        <button class="mask-btn" onclick="importMask('landscape')">Choisir PNG</button>
-        <button class="mask-btn remove" id="maskLandscapeRemove" onclick="removeMask('landscape')" style="display:none;">Supprimer</button>
+        <button class="mask-btn" onclick="importMask('landscape')" data-i18n="choosePng">Choisir PNG</button>
+        <button class="mask-btn remove" id="maskLandscapeRemove" onclick="removeMask('landscape')" style="display:none;" data-i18n="remove">Supprimer</button>
       </div>
     </div>
 
     <div class="s-label">Hotfolder</div>
     <div class="hotfolder-block">
       <div class="hotfolder-toggle" onclick="toggleHotfolder()">
-        <span class="hotfolder-toggle-label">Activer le hotfolder</span>
+        <span class="hotfolder-toggle-label" data-i18n="enableHotfolder">Activer le hotfolder</span>
         <div class="toggle" id="hotfolderToggle">
           <div class="toggle-thumb"></div>
         </div>
       </div>
       <div class="hotfolder-path-block" id="hotfolderPathBlock">
         <div class="hotfolder-path" id="hotfolderPathDisplay">Aucun dossier sélectionné</div>
-        <button class="hotfolder-btn" onclick="selectHotfolder()">Choisir le dossier</button>
+        <button class="hotfolder-btn" onclick="selectHotfolder()" data-i18n="chooseFolder">Choisir le dossier</button>
         <div class="hotfolder-status" id="hotfolderStatus">En attente d'un dossier</div>
       </div>
     </div>
 
-    <div class="s-label">Port local</div>
+    <div class="s-label" data-i18n="localPort">Port local</div>
     <input type="number" id="portInput" value="4242" min="1024" max="65535"/>
 
-    <button class="save-btn" onclick="saveSettings()">Enregistrer</button>
-    <button class="back-btn" onclick="showMain()">← Retour</button>
+    <div class="s-label" data-i18n="language">Langue</div>
+    <select id="languageSelect">
+      <option value="auto" data-i18n="langAuto">Automatique (langue du Mac)</option>
+      <option value="fr">Français</option>
+      <option value="en">English</option>
+    </select>
+
+    <button class="save-btn" onclick="saveSettings()" data-i18n="save">Enregistrer</button>
+    <button class="back-btn" onclick="showMain()" data-i18n="back">← Retour</button>
   </div>
 
   <script>
+    // ---------- Traductions ----------
+    const I18N = {
+      fr: {
+        ready: 'Prête', noPrinter: 'Aucune imprimante', noPrinterDetected: 'Aucune imprimante détectée',
+        paperUnknown: 'Papier : niveau inconnu', paperValue: 'Papier : {r} / {t}', checking: 'vérification…',
+        paperUnknownTip: "Le niveau n'a pas pu être lu (imprimante non sélectionnée, débranchée ou pilote sans cette information)",
+        updatedAt: 'mis à jour {time}', prints: 'Impressions',
+        session: 'Session : <strong>{n}</strong> tirage{s}', errors: '⚠ {n} erreur{s}',
+        pending: 'En attente', failed: 'Échec', canceled: 'Annulé',
+        empty: "Aucune impression pour l'instant", openLogs: 'Ouvrir les journaux enregistrés', older: 'Impressions plus anciennes : ',
+        direct: 'Direct', hotfolderSrc: 'Hotfolder',
+        settings: 'Paramètres', quit: 'Quitter', printer: 'Imprimante', paperSize: 'Format papier',
+        masks: 'Masques', portrait: 'Portrait', landscape: 'Paysage', import: '+ Importer', choosePng: 'Choisir PNG', remove: 'Supprimer',
+        enableHotfolder: 'Activer le hotfolder', noFolder: 'Aucun dossier sélectionné', chooseFolder: 'Choisir le dossier',
+        waitingFolder: "En attente d'un dossier", active: '● Actif — surveillance en cours', disabled: 'Désactivé',
+        localPort: 'Port local', language: 'Langue', langAuto: 'Automatique (langue du Mac)', save: 'Enregistrer', back: '← Retour',
+        locale: 'fr-FR'
+      },
+      en: {
+        ready: 'Ready', noPrinter: 'No printer', noPrinterDetected: 'No printer detected',
+        paperUnknown: 'Paper: level unknown', paperValue: 'Paper: {r} / {t}', checking: 'checking…',
+        paperUnknownTip: "The level couldn't be read (no printer selected, printer unplugged, or the driver doesn't provide it)",
+        updatedAt: 'updated {time}', prints: 'Prints',
+        session: 'Session: <strong>{n}</strong> print{s}', errors: '⚠ {n} error{s}',
+        pending: 'Pending', failed: 'Failed', canceled: 'Canceled',
+        empty: 'No prints yet', openLogs: 'Open saved logs', older: 'Older prints: ',
+        direct: 'Direct', hotfolderSrc: 'Hotfolder',
+        settings: 'Settings', quit: 'Quit', printer: 'Printer', paperSize: 'Paper size',
+        masks: 'Masks', portrait: 'Portrait', landscape: 'Landscape', import: '+ Import', choosePng: 'Choose PNG', remove: 'Remove',
+        enableHotfolder: 'Enable hotfolder', noFolder: 'No folder selected', chooseFolder: 'Choose folder',
+        waitingFolder: 'Waiting for a folder', active: '● Active — watching', disabled: 'Disabled',
+        localPort: 'Local port', language: 'Language', langAuto: 'Automatic (Mac language)', save: 'Save', back: '← Back',
+        locale: 'en-GB'
+      }
+    }
+    let lang = 'fr'
+
+    function t(key, params = {}) {
+      let str = (I18N[lang] && I18N[lang][key]) ?? I18N.fr[key] ?? key
+      for (const [k, v] of Object.entries(params)) str = str.replaceAll(`{${k}}`, v)
+      return str
+    }
+
+    function applyStaticTexts() {
+      document.documentElement.lang = lang
+      document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n) })
+    }
+
+    let lastPaper = null
     let currentSettings = {}
-    let currentJobs = []
+    let currentLogs = []
+    let currentStats = { requested: 0, printed: 0, failures: 0, gaps: 0 }
     let selectedFormat = '10x15'
     let hotfolderActive = false
 
     async function init() {
       currentSettings = await window.api.getSettings()
-      currentJobs = await window.api.getJobs()
+      lang = await window.api.getLanguage()
+      applyStaticTexts()
+      document.getElementById('languageSelect').value = currentSettings.language || 'auto'
+      window.api.onLanguageChanged(newLang => {
+        lang = newLang
+        applyStaticTexts()
+        updatePrinterBlock()
+        updateHotfolderUI()
+        renderLogs()
+        renderPaper(lastPaper)
+      })
 
       selectedFormat = currentSettings.format || '10x15'
       hotfolderActive = currentSettings.hotfolderActive || false
 
       updatePrinterBlock()
-      renderJobs()
 
       const printers = await window.api.getPrinters()
       const select = document.getElementById('printerSelect')
       select.innerHTML = printers.length
         ? printers.map(p => `<option value="${p}" ${p === currentSettings.printer ? 'selected' : ''}>${p}</option>`).join('')
-        : '<option value="">Aucune imprimante détectée</option>'
+        : `<option value="">${t('noPrinterDetected')}</option>`
 
       document.getElementById('portInput').value = currentSettings.port || 4242
 
@@ -553,46 +761,103 @@
       updateMaskPreviews()
       updateHotfolderUI()
 
-      window.api.onJobsUpdated((jobs) => {
-        currentJobs = jobs
-        renderJobs()
-      })
+      setJournal(await window.api.getLogs())
+      window.api.onLogsUpdated(setJournal)
+
+      renderPaper(await window.api.getPaper())
+      window.api.onPaperUpdated(renderPaper)
+    }
+
+    function renderPaper(paper) {
+      lastPaper = paper
+      const line = document.getElementById('paperLine')
+      const text = document.getElementById('paperText')
+      const fill = document.getElementById('paperFill')
+      const checking = paper && paper.checking ? ` <span class="paper-checking">· ${t('checking')}</span>` : ''
+      if (!paper || !paper.total) {
+        text.innerHTML = t('paperUnknown') + checking
+        fill.style.width = '0'
+        line.classList.remove('low')
+        line.classList.add('unknown')
+        line.title = t('paperUnknownTip')
+        return
+      }
+      line.classList.remove('unknown')
+      text.innerHTML = t('paperValue', { r: paper.remaining, t: paper.total }) + checking
+      fill.style.width = Math.max(0, Math.min(100, Math.round(paper.remaining / paper.total * 100))) + '%'
+      line.classList.toggle('low', !!paper.low)
+      line.title = (paper.media ? paper.media + ' · ' : '') +
+        (paper.updatedAt ? t('updatedAt', { time: new Date(paper.updatedAt).toLocaleTimeString(t('locale')) }) : '')
+    }
+
+    function escapeHtml(v) {
+      return String(v ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]))
+    }
+
+    function logStatus(entry) {
+      switch (entry.status) {
+        case 'imprimé': return ['st-ok', `✓ ${entry.sheets ?? entry.quantity}/${entry.quantity}`]
+        case 'écart':   return ['st-bad', `⚠ ${entry.sheets ?? 0}/${entry.quantity}`]
+        case 'échec':   return ['st-bad', t('failed')]
+        case 'annulé':  return ['st-bad', t('canceled')]
+        default:        return ['st-wait', t('pending')]
+      }
+    }
+
+    function setJournal(journal) {
+      currentLogs = journal.logs || []
+      currentStats = journal.stats || currentStats
+      renderLogs()
+    }
+
+    function isProblem(entry) {
+      return ['échec', 'écart', 'annulé'].includes(entry.status) || !!entry.bubbleError
+    }
+
+    const MAX_SHOWN = 20
+
+    function renderSummary() {
+      const printed = currentStats.printed
+      const errors = currentLogs.filter(isProblem).length
+      return `<div class="log-summary">
+        <span>${t('session', { n: printed, s: printed > 1 ? 's' : '' })}</span>
+        ${errors ? `<span class="err-count">${t('errors', { n: errors, s: errors > 1 ? 's' : '' })}</span>` : ''}
+      </div>`
+    }
+
+    function renderLogs() {
+      const list = document.getElementById('logList')
+      if (!currentLogs.length) {
+        list.innerHTML = `<div class="empty-queue">${t('empty')}</div><a class="log-folder" onclick="window.api.openLogFolder()">${t('openLogs')}</a>`
+        return
+      }
+      const shown = currentLogs.slice(0, MAX_SHOWN)
+      list.innerHTML = renderSummary() + shown.map(entry => {
+        const [cls, label] = logStatus(entry)
+        const time = new Date(entry.time).toLocaleTimeString(t('locale'), { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+        const source = entry.source === 'direct' ? t('direct') : t('hotfolderSrc')
+        const thumb = entry.thumb ? `<img class="log-thumb" src="${entry.thumb}" alt="">` : '<div class="log-thumb"></div>'
+        const errText = [entry.error, entry.bubbleError].filter(Boolean).join(' · ')
+        const error = errText ? `<div class="log-error" title="${escapeHtml(errText)}">${escapeHtml(errText)}</div>` : ''
+        return `
+          <div class="log-item">
+            ${thumb}
+            <div class="log-info">
+              <div class="log-name" title="${escapeHtml(entry.name)}">${escapeHtml(entry.name)}</div>
+              <div class="log-meta">${time} · ${source} · × ${entry.quantity}${entry.file && entry.file !== entry.name && entry.source === 'direct' ? ' · ' + escapeHtml(entry.file) : ''}</div>
+              ${error}
+            </div>
+            <div class="log-actions">
+              <span class="log-status ${cls}">${label}</span>
+            </div>
+          </div>`
+      }).join('') + `<a class="log-folder" onclick="window.api.openLogFolder()">${currentLogs.length > MAX_SHOWN ? t('older') : ''}${t('openLogs')}</a>`
     }
 
     function updatePrinterBlock() {
-      document.getElementById('printerName').textContent = currentSettings.printer || 'Aucune imprimante'
+      document.getElementById('printerName').textContent = currentSettings.printer || t('noPrinter')
       document.getElementById('printerSub').textContent =
         `${currentSettings.format || '—'} · Port ${currentSettings.port || 4242}`
-    }
-
-    function renderJobs() {
-      const list = document.getElementById('jobList')
-      const active = currentJobs.filter(j => j.status !== 'done')
-
-      if (active.length === 0) {
-        list.innerHTML = '<div class="empty-queue">Aucune impression en cours</div>'
-        return
-      }
-
-      list.innerHTML = active.map(job => `
-        <div class="job-item ${job.status === 'printing' ? 'is-active' : ''}">
-          <div class="job-dot dot-${job.status}"></div>
-          <div class="job-info">
-            <div class="job-name">${job.name || 'Sans nom'}</div>
-            <div class="job-meta">× ${job.quantity} · ${labelStatus(job.status)}</div>
-          </div>
-        </div>
-      `).join('')
-    }
-
-    function labelStatus(status) {
-      const labels = {
-        pending: 'en attente',
-        printing: 'impression en cours',
-        done: 'terminé',
-        error: 'erreur'
-      }
-      return labels[status] || status
     }
 
     function selectFormat(el) {
@@ -617,7 +882,8 @@
         printer: document.getElementById('printerSelect').value,
         format: selectedFormat,
         port: parseInt(document.getElementById('portInput').value) || 4242,
-        hotfolderActive: hotfolderActive
+        hotfolderActive: hotfolderActive,
+        language: document.getElementById('languageSelect').value
       }
       currentSettings = await window.api.updateSettings(newSettings)
       showMain()
@@ -641,12 +907,12 @@
         const folderName = currentSettings.hotfolderPath.split('/').pop()
         pathDisplay.textContent = folderName
         pathDisplay.classList.add('set')
-        status.textContent = hotfolderActive ? '● Actif — surveillance en cours' : 'Désactivé'
+        status.textContent = hotfolderActive ? t('active') : t('disabled')
         status.className = 'hotfolder-status' + (hotfolderActive ? ' active' : '')
       } else {
-        pathDisplay.textContent = 'Aucun dossier sélectionné'
+        pathDisplay.textContent = t('noFolder')
         pathDisplay.classList.remove('set')
-        status.textContent = 'En attente d\'un dossier'
+        status.textContent = t('waitingFolder')
         status.className = 'hotfolder-status'
       }
     }
