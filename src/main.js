@@ -1,5 +1,5 @@
 const { app, BrowserWindow, Tray, nativeImage, ipcMain, dialog, Notification, shell } = require('electron')
-const { autoUpdater } = require('electron-updater')
+const axios = require('axios')
 const path = require('path')
 const { exec } = require('child_process')
 const { startServer, stopServer, getSettings, updateSettings, processAndPrint, getLogs, getPaper, logDir } = require('./server')
@@ -38,18 +38,55 @@ const MAIN_TEXTS = {
     paperTitle: 'Papier bientôt épuisé',
     paperBody: (r, t) => `Il reste ${r} tirages sur ${t}. Préparez un nouveau rouleau.`,
     maskTitle: o => `Choisir le masque ${o === 'portrait' ? 'portrait' : 'paysage'}`,
-    folderTitle: 'Choisir le dossier hotfolder'
+    folderTitle: 'Choisir le dossier hotfolder',
+    updateTitle: 'Nouvelle version disponible',
+    updateBody: v => `Pixilive Print Station ${v} est disponible. Cliquez pour la télécharger.`
   },
   en: {
     paperTitle: 'Paper running low',
     paperBody: (r, t) => `${r} prints left out of ${t}. Get a new roll ready.`,
     maskTitle: o => `Choose the ${o === 'portrait' ? 'portrait' : 'landscape'} mask`,
-    folderTitle: 'Choose the hotfolder'
+    folderTitle: 'Choose the hotfolder',
+    updateTitle: 'New version available',
+    updateBody: v => `Pixilive Print Station ${v} is available. Click to download it.`
   }
 }
 
 function mt() {
   return MAIN_TEXTS[resolveLang()]
+}
+
+// ---------- Nouvelle version ----------
+// Pas d'installation automatique (l'app n'est pas signée) : on prévient simplement
+// l'utilisateur qu'une version plus récente est publiée sur GitHub.
+const RELEASES_URL = 'https://github.com/Pixilive/pixilive-print-station/releases'
+
+function isNewerVersion(latest, current) {
+  const a = String(latest).replace(/^v/, '').split('.').map(n => parseInt(n) || 0)
+  const b = String(current).replace(/^v/, '').split('.').map(n => parseInt(n) || 0)
+  for (let i = 0; i < 3; i++) {
+    if ((a[i] || 0) > (b[i] || 0)) return true
+    if ((a[i] || 0) < (b[i] || 0)) return false
+  }
+  return false
+}
+
+async function checkNewVersion() {
+  try {
+    const { data } = await axios.get('https://api.github.com/repos/Pixilive/pixilive-print-station/releases/latest', {
+      headers: { 'User-Agent': 'Pixilive-Print-Station', Accept: 'application/vnd.github+json' },
+      timeout: 10000
+    })
+    const latest = String(data.tag_name || '').replace(/^v/, '')
+    console.log('Dernière version publiée :', latest, '| version installée :', app.getVersion())
+    if (latest && isNewerVersion(latest, app.getVersion()) && Notification.isSupported()) {
+      const notif = new Notification({ title: mt().updateTitle, body: mt().updateBody(latest) })
+      notif.on('click', () => shell.openExternal(data.html_url || RELEASES_URL))
+      notif.show()
+    }
+  } catch (err) {
+    console.error('Vérification de version impossible :', err.message)
+  }
 }
 
 function onLogs(journal) {
@@ -104,7 +141,7 @@ if (process.defaultApp) {
 
 app.whenReady().then(() => {
   startServer(addJob, updateJobStatus, { onLogs, onPaper, getLang: resolveLang })
-  autoUpdater.checkForUpdatesAndNotify()
+  checkNewVersion()
 
   const icon = nativeImage.createFromPath(path.join(__dirname, 'assets/tray-icon.png'))
   icon.setTemplateImage(true)

@@ -19,7 +19,8 @@
     "mac": {
       "category": "public.app-category.productivity",
       "target": "dmg",
-      "icon": "src/assets/icon.icns"
+      "icon": "src/assets/icon.icns",
+      "artifactName": "Pixilive-Print-Station-${version}-${arch}.${ext}"
     },
     "win": {
       "target": "nsis"
