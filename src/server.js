@@ -149,7 +149,7 @@ function cleanFileName(fileName) {
 }
 
 function logDir() {
-  return path.join(os.homedir(), 'Documents', 'Pixilive Print Station', 'journaux')
+  return path.join(os.homedir(), 'Documents', 'Pixilive Print Station', 'Logs')
 }
 
 // Un fichier par session (ouverture de PPS), créé à la première impression
